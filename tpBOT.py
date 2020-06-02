@@ -37,8 +37,8 @@ if __name__ == '__main__':
             except NoSuchElementException:
                 time.sleep(1)
 
-        username = "zisop"
-        password = "sl4shd0t"
+        username = ""
+        password = ""
         username_elem.send_keys(username)
         password_elem.send_keys(password)
         enter_path = "/html/body/div[5]/div/div/div[3]/div/div[1]/div/table[1]/tbody/tr[2]/td/div/table/tbody/tr[4]/td[2]/table/tbody/tr/td[1]/button"
