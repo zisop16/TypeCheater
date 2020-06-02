@@ -1,2 +1,6 @@
 __pycache__/
 captcha_image.png
+account.txt
+dist/
+build/
+tpBOT.spec
