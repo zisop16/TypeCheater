@@ -8,10 +8,10 @@ Have you ever wanted to impress your friends by getting large, insane typeracer 
 2. Download the chromedriver.exe (note, if chromedriver won't run, you need to find your correct version of chromedriver)
 Steps to find correct version:
 
-Go to settings in chrome, in the top right by clicking the . . .
-Go to about chrome, look for the first number in the version number (should be 83, 82, 81, etc)
-Look up "Chromedriver version XX download" and put in your version in place of XX
-Download it
+- Go to settings in chrome, in the top right by clicking the . . .
+- Go to about chrome, look for the first number in the version number (should be 83, 82, 81, etc)
+- Look up "Chromedriver version XX download" and put in your version in place of XX
+- Download it
 
 3. Place chromedriver.exe into a folder, with the .exe file
 4. Download tesseract here: https://digi.bib.uni-mannheim.de/tesseract/tesseract-ocr-w64-setup-v5.0.0-alpha.20200328.exe
