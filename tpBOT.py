@@ -1,17 +1,24 @@
+#------------------------LIBS------------------------#
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import *
 from selenium.webdriver.chrome.options import Options
+
 import PIL
 from PIL import Image
-import time
-import pytesseract
-import requests
-import math
-import json
+
 from CaptchaSolve import CaptchaSolver
 
-class type_racer:
+import pytesseract
+import requests
+
+import time
+import math
+import json
+
+#------------------------CLASS------------------------#
+class typeracer:
+    # init driver, disable logging
     def __init__(self):
         chrome_options = Options()
         chrome_options.add_argument("--log-level=OFF")
@@ -21,21 +28,32 @@ class type_racer:
         self.possible_captcha_paths = range(min_path, max_path + 1, 1)
 
     def log_in(self):
-        """
-        Logs in by looking at config.txt for an account
-        """
-        main_url = "https://play.typeracer.com/"
-        self.driver.get(main_url)
-        signin_path = "/html/body/div[1]/table/tbody/tr/td[3]/div/table/tbody/tr[2]/td[1]/table/tbody/tr/td[1]/a"
+        '''
+        logs in by looking at config.txt for an account
+
+        input: none
+        return: void
+        '''
+        # visit typeracer
+        self.driver.get("https://play.typeracer.com/")
+        signin_xpath = "/html/body/div[1]/table/tbody/tr/td[3]/div/table/tbody/tr[2]/td[1]/table/tbody/tr/td[1]/a"
+        # access signin_element once the page has loaded
         while True:
             try:
-                signin_element = self.driver.find_element_by_xpath(signin_path)
+                signin_element = self.driver.find_element_by_xpath(signin_xpath)
                 break
             except NoSuchElementException:
                 time.sleep(1)
         signin_element.click()
 
+
         def write_default():
+            '''
+            writes config.txt
+
+            input: none
+            return: void
+            '''
             with open("config.txt", "w") as config_file:
                 config_dict = {
                     "Username": "BotsAreGay",
@@ -46,121 +64,154 @@ class type_racer:
                 config_text = json.dumps(config_dict, indent=4)
                 config_file.write(config_text)
                 self.driver.quit()
-        as_guest = False
-        try:
-            with open("config.txt") as config_file:
-                try:
-                    config_json = json.loads(config_file.read())
-                except json.decoder.JSONDecodeError:
-                    print("Couldn't find anything in config.txt... please rerun the program")
-                    write_default()
-                    quit()
-                try:
-                    username = config_json["Username"]
-                except KeyError:
-                    username = ""
-                try:
-                    password = config_json["Password"]
-                    if password == "":
-                        as_guest = True
-                except KeyError:
-                    as_guest = True
-                try:
-                    set_default = False
-                    try:
-                        self.wpm = int(config_json["Words Per Minute"])
-                    except ValueError:
-                        set_default = True
-                    if not self.wpm > 0:
-                        set_default = True
-                    if set_default:
-                        print("Words per minute not valid... using default of 100")
-                        self.wpm = 100
-                except KeyError:
-                    print("Couldn't find wpm in config.txt... using default of 100")
-                    self.wpm = 100
-                try:
-                    set_default = False
-                    try:
-                        self.chars_per_word = int(config_json["Characters per key input"])
-                    except ValueError:
-                        set_default = True
-                    if not self.chars_per_word > 0:
-                        set_default = True
-                    if set_default:
-                        self.chars_per_word = 5
-                except KeyError:
-                    print("Couldnt find Characters per key input in config... using default of 5")
-                    self.chars_per_word = 5
 
-        except FileNotFoundError:
-            print("Couldn't find a config.txt. Please restart the program with your Username:Password inside."
-                  " Alternatively, play as a guest by using Username and no colon")
-            write_default()
-            quit()
+        def extract_config():
+            '''
+            if config.txt exists, extracts data from it
+            calls write_default() if config.txt doesn't already exist in dir
+
+            input: none
+            return: bool, int, int, string, string
+            '''
+            as_guest = False
+            try:
+                with open("config.txt") as config_file:
+                    try:
+                        config_json = json.loads(config_file.read())
+                    except json.decoder.JSONDecodeError:
+                        print("Couldn't find anything in config.txt... please rerun the program")
+                        write_default()
+                        driver.quit()
+                        quit()
+                    try:
+                        username = config_json["Username"]
+                    except KeyError:
+                        print("No username found in config.txt... playing with name of randomly generated characters")
+                        username = ""
+                    else:
+                        if(len(username)<2):
+                            print("Username needs to at least 2 characters... playing with default username for now.")
+                            username = ""
+                    try:
+                        password = config_json["Password"]
+                        if password == "":
+                            as_guest = True
+                    except KeyError:
+                        password = ""
+                        as_guest = True
+                    try:
+                        set_default = False
+                        try:
+                            self.wpm = int(config_json["Words Per Minute"])
+                        except ValueError:
+                            set_default = True
+                        if not self.wpm > 0:
+                            set_default = True
+                        if set_default:
+                            print("Words per minute not valid... using default of 100")
+                            self.wpm = 100
+                    except KeyError:
+                        print("Couldn't find wpm in config.txt... using default of 100")
+                        self.wpm = 100
+                    try:
+                        set_default = False
+                        try:
+                            self.chars_per_word = int(config_json["Characters per key input"])
+                        except ValueError:
+                            set_default = True
+                        if not self.chars_per_word > 0:
+                            set_default = True
+                        if set_default:
+                            self.chars_per_word = 5
+                    except KeyError:
+                        print("Couldnt find Characters per key input in config... using default of 5")
+                        self.chars_per_word = 5
+
+            except FileNotFoundError:
+                print("Couldn't find a config.txt. Please restart the program with your Username:Password inside."
+                      " Alternatively, play as a guest by using Username and no colon")
+                write_default()
+                quit()
+
+            return as_guest, self.wpm, self.chars_per_word, username, password
+
+        # call extract_config and store data
+        as_guest, wpm, chars_per_word, username, password = extract_config()
+
         if as_guest:
             print("Found no password in config.txt... playing as a guest with name inputted")
             while True:
                 try:
-                    guest_path = "/html/body/div[5]/div/div/div[3]/div/div[1]/div/table[3]/tbody/tr[1]/td/a/table/tbody/tr/td[2]"
-                    guest_elem = self.driver.find_element_by_xpath(guest_path)
+                    guest_xpath = "/html/body/div[5]/div/div/div[3]/div/div[1]/div/table[3]/tbody/tr[1]/td/a/table/tbody/tr/td[2]"
+                    guest_elem = self.driver.find_element_by_xpath(guest_xpath)
                     guest_elem.click()
                     break
                 except NoSuchElementException:
                     time.sleep(1)
-            nickname_path = "/html/body/div[5]/div/div/div[3]/div/div[1]/div/table[3]/tbody/tr[2]/td/div/table/tbody/tr[1]/td/table/tbody/tr/td[2]/input"
+            nickname_xpath = "/html/body/div[5]/div/div/div[3]/div/div[1]/div/table[3]/tbody/tr[2]/td/div/table/tbody/tr[1]/td/table/tbody/tr/td[2]/input"
             while True:
                 try:
-                    nickname_elem = self.driver.find_element_by_xpath(nickname_path)
+                    nickname_elem = self.driver.find_element_by_xpath(nickname_xpath)
                     break
                 except NoSuchElementException:
                     time.sleep(1)
             if username == "":
-                print("No username found in config.txt... playing with name of randomly generated characters")
                 time.sleep(1.5)
                 username = "IM A BOT LOL"
                 print("Name selected: %s" % username)
             nickname_elem.clear()
             nickname_elem.send_keys(username)
             time.sleep(1)
-            apply_path = "/html/body/div[5]/div/div/div[3]/div/div[1]/div/table[3]/tbody/tr[2]/td/div/table/tbody/tr[1]/td/table/tbody/tr/td[3]/button"
-            apply_elem = self.driver.find_element_by_xpath(apply_path)
+            apply_xpath = "/html/body/div[5]/div/div/div[3]/div/div[1]/div/table[3]/tbody/tr[2]/td/div/table/tbody/tr[1]/td/table/tbody/tr/td[3]/button"
+            apply_elem = self.driver.find_element_by_xpath(apply_xpath)
             apply_elem.click()
         else:
-            user_path = "/html/body/div[5]/div/div/div[3]/div/div[1]/div/table[1]/tbody/tr[2]/td/div/table/tbody/tr[1]/td[2]/input"
-            pass_path = "/html/body/div[5]/div/div/div[3]/div/div[1]/div/table[1]/tbody/tr[2]/td/div/table/tbody/tr[2]/td[2]/table/tbody/tr[1]/td/input"
+            user_xpath = "/html/body/div[5]/div/div/div[3]/div/div[1]/div/table[1]/tbody/tr[2]/td/div/table/tbody/tr[1]/td[2]/input"
+            pass_xpath = "/html/body/div[5]/div/div/div[3]/div/div[1]/div/table[1]/tbody/tr[2]/td/div/table/tbody/tr[2]/td[2]/table/tbody/tr[1]/td/input"
             while True:
                 try:
-                    username_elem = self.driver.find_element_by_xpath(user_path)
-                    password_elem = self.driver.find_element_by_xpath(pass_path)
+                    username_elem = self.driver.find_element_by_xpath(user_xpath)
+                    password_elem = self.driver.find_element_by_xpath(pass_xpath)
                     break
                 except NoSuchElementException:
                     time.sleep(1)
             username_elem.send_keys(username)
             password_elem.send_keys(password)
-            enter_path = "/html/body/div[5]/div/div/div[3]/div/div[1]/div/table[1]/tbody/tr[2]/td/div/table/tbody/tr[4]/td[2]/table/tbody/tr/td[1]/button"
-            enter_elem = self.driver.find_element_by_xpath(enter_path)
+            enter_xpath = "/html/body/div[5]/div/div/div[3]/div/div[1]/div/table[1]/tbody/tr[2]/td/div/table/tbody/tr[4]/td[2]/table/tbody/tr/td[1]/button"
+            enter_elem = self.driver.find_element_by_xpath(enter_xpath)
             enter_elem.click()
 
     def enter_race(self):
-        """
-        Will enter the race assuming that we are at the login page
-        """
+        '''
+        enters the race, assuming that the bot has logged in
+
+        input: none
+        output: void
+        '''
         while True:
             try:
-                racestart_path = "/html/body/div[1]/div/div[1]/div[2]/table/tbody/tr[2]/td[2]/div/div[1]/div/table/tbody/tr[2]/td/table/tbody/tr/td[2]/table/tbody/tr[1]/td/a"
-                racestart_elem = self.driver.find_element_by_xpath(racestart_path)
+                racestart_xpath = "/html/body/div[1]/div/div[1]/div[2]/table/tbody/tr[2]/td[2]/div/div[1]/div/table/tbody/tr[2]/td/table/tbody/tr/td[2]/table/tbody/tr[1]/td/a"
+                racestart_elem = self.driver.find_element_by_xpath(racestart_xpath)
                 break
             except ElementNotInteractableException:
                 time.sleep(1)
         racestart_elem.click()
 
     def complete_race(self):
-        """
-        Completes a race assuming that the player is currently at the race page
-        """
+        '''
+        completes race assuming that the bot is currently at the race page
+
+        input: none
+        output: void
+        '''
 
         def find_solution():
+            '''
+            returns a solution to the race text, assuming that the bot is currrently at the race page
+
+            input: none
+            return: string
+            '''
             # There are two text containers that may or may not appear,
             # So we store their possibilities in these two booleans
             found_third = True
@@ -170,21 +221,21 @@ class type_racer:
                     # We will try to find the solution to the typeracer by polling these two text elements
                     # If these two elements don't exist, the page hasn't loaded yet, so we sleep and reiterate
                     # The loop
-                    firsttext_path = r"/html/body/div[1]/div/div[1]/div[2]/table/tbody/tr[2]/td[2]/div/div[1]/div/table/tbody/tr[2]/td[3]/table/tbody/tr[2]/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/span[1]"
-                    firsttext_elem = self.driver.find_element_by_xpath(firsttext_path)
+                    firsttext_xpath = r"/html/body/div[1]/div/div[1]/div[2]/table/tbody/tr[2]/td[2]/div/div[1]/div/table/tbody/tr[2]/td[3]/table/tbody/tr[2]/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/span[1]"
+                    firsttext_elem = self.driver.find_element_by_xpath(firsttext_xpath)
                     first_text = firsttext_elem.text
-                    secondtext_path = r"/html/body/div[1]/div/div[1]/div[2]/table/tbody/tr[2]/td[2]/div/div[1]/div/table/tbody/tr[2]/td[3]/table/tbody/tr[2]/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/span[2]"
-                    secondtext_elem = self.driver.find_element_by_xpath(secondtext_path)
+                    secondtext_xpath = r"/html/body/div[1]/div/div[1]/div[2]/table/tbody/tr[2]/td[2]/div/div[1]/div/table/tbody/tr[2]/td[3]/table/tbody/tr[2]/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/span[2]"
+                    secondtext_elem = self.driver.find_element_by_xpath(secondtext_xpath)
                     second_text = secondtext_elem.text
                     try:
                         # There is a possibility of being 3 or 4 text elements storing text,
                         # So we poll these elements to see if they exist
-                        thirdtext_path = r"/html/body/div[1]/div/div[1]/div[2]/table/tbody/tr[2]/td[2]/div/div[1]/div/table/tbody/tr[2]/td[3]/table/tbody/tr[2]/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/span[3]"
-                        thirdtext_elem = self.driver.find_element_by_xpath(thirdtext_path)
+                        thirdtext_xpath = r"/html/body/div[1]/div/div[1]/div[2]/table/tbody/tr[2]/td[2]/div/div[1]/div/table/tbody/tr[2]/td[3]/table/tbody/tr[2]/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/span[3]"
+                        thirdtext_elem = self.driver.find_element_by_xpath(thirdtext_xpath)
                         third_text = thirdtext_elem.text
                         try:
-                            fourthtext_path = r"/html/body/div[1]/div/div[1]/div[2]/table/tbody/tr[2]/td[2]/div/div[1]/div/table/tbody/tr[2]/td[3]/table/tbody/tr[2]/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/span[4]"
-                            fourthtext_elem = self.driver.find_element_by_xpath(fourthtext_path)
+                            fourthtext_xpath = r"/html/body/div[1]/div/div[1]/div[2]/table/tbody/tr[2]/td[2]/div/div[1]/div/table/tbody/tr[2]/td[3]/table/tbody/tr[2]/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/span[4]"
+                            fourthtext_elem = self.driver.find_element_by_xpath(fourthtext_xpath)
                             fourth_text = fourthtext_elem.text
                         except NoSuchElementException:
                             found_fourth = False
@@ -238,8 +289,8 @@ class type_racer:
 
         while True:
             try:
-                raceenter_path = r"/html/body/div[1]/div/div[1]/div[2]/table/tbody/tr[2]/td[2]/div/div[1]/div/table/tbody/tr[2]/td[3]/table/tbody/tr[2]/td/table/tbody/tr[2]/td/input"
-                raceenter_elem = self.driver.find_element_by_xpath(raceenter_path)
+                raceenter_xpath = r"/html/body/div[1]/div/div[1]/div[2]/table/tbody/tr[2]/td[2]/div/div[1]/div/table/tbody/tr[2]/td[3]/table/tbody/tr[2]/td/table/tbody/tr[2]/td/input"
+                raceenter_elem = self.driver.find_element_by_xpath(raceenter_xpath)
 
                 for word in words:
                     start_time = time.time()
@@ -258,21 +309,23 @@ class type_racer:
                 continue
 
     def handle_captcha(self):
-        """
-        Handles the possibility of a captcha
-        assuming that the player is finished with a race
-        """
+        '''
+        handles the possibility of a captcha, assuming that the player is finished with a race
+
+        input: none
+        output: void
+        '''
         try:
             for path_num in self.possible_captcha_paths:
-                begincaptcha_path = r"/html/body/div[%i]/div/div/div[2]/div/div/table/tbody/tr[4]/td/button" % path_num
+                begincaptcha_xpath = r"/html/body/div[%i]/div/div/div[2]/div/div/table/tbody/tr[4]/td/button" % path_num
                 if path_num != self.possible_captcha_paths[len(self.possible_captcha_paths) - 1]:
                     try:
-                        begincaptcha_elem = self.driver.find_element_by_xpath(begincaptcha_path)
+                        begincaptcha_elem = self.driver.find_element_by_xpath(begincaptcha_xpath)
                         break
                     except NoSuchElementException:
                         pass
                 else:
-                    begincaptcha_elem = self.driver.find_element_by_xpath(begincaptcha_path)
+                    begincaptcha_elem = self.driver.find_element_by_xpath(begincaptcha_xpath)
             begincaptcha_elem.click()
             found_captcha = True
         except NoSuchElementException:
@@ -282,20 +335,26 @@ class type_racer:
         if found_captcha:
 
             def extract_captcha():
+                '''
+                finds and returns a captcha element along with its path number, assuming that the bot is on the captcha page
+
+                input: none
+                return: string, int
+                '''
 
                 def attempt_find():
                     correct_path = None
                     for path_num in self.possible_captcha_paths:
-                        captcha_path = r"/html/body/div[%i]/div/div/div[2]/div/div/table/tbody/tr[3]/td/img" % path_num
+                        captcha_xpath = r"/html/body/div[%i]/div/div/div[2]/div/div/table/tbody/tr[3]/td/img" % path_num
                         if path_num != self.possible_captcha_paths[len(self.possible_captcha_paths) - 1]:
                             try:
-                                captcha_elem = self.driver.find_element_by_xpath(captcha_path)
+                                captcha_elem = self.driver.find_element_by_xpath(captcha_xpath)
                                 correct_path = path_num
                                 break
                             except NoSuchElementException:
                                 pass
                         else:
-                            captcha_elem = self.driver.find_element_by_xpath(captcha_path)
+                            captcha_elem = self.driver.find_element_by_xpath(captcha_xpath)
                             correct_path = path_num
                     return captcha_elem, correct_path
 
@@ -308,6 +367,12 @@ class type_racer:
                 return captcha_elem, path_num
 
             def solve_captcha():
+                '''
+                extracts image text and enters it in, assuming that the bot is on the captcha page
+
+                input: none
+                return: void
+                '''
                 captcha_elem, path_num = extract_captcha()
                 captcha_url = captcha_elem.get_attribute("src")
                 captcha_page = requests.get(captcha_url)
@@ -316,17 +381,17 @@ class type_racer:
                 solver = CaptchaSolver(r"C:\Program Files\Tesseract-OCR\tesseract.exe")
                 solution = solver.resolve("captcha_image.png").replace("\n", "")
 
-                captcha_textbox_path = r"/html/body/div[%i]/div/div/div[2]/div/div/table/tbody/tr[4]/td/textarea" % path_num
+                captcha_textbox_xpath = r"/html/body/div[%i]/div/div/div[2]/div/div/table/tbody/tr[4]/td/textarea" % path_num
                 while True:
                     try:
-                        captcha_textbox_elem = self.driver.find_element_by_xpath(captcha_textbox_path)
+                        captcha_textbox_elem = self.driver.find_element_by_xpath(captcha_textbox_xpath)
                         captcha_textbox_elem.send_keys(solution)
                         break
                     except (ElementNotInteractableException, NoSuchElementException):
                         time.sleep(1)
 
-                submit_path = r"/html/body/div[%i]/div/div/div[2]/div/div/table/tbody/tr[5]/td/table/tbody/tr/td[2]/button" % path_num
-                submit_elem = self.driver.find_element_by_xpath(submit_path)
+                submit_xpath = r"/html/body/div[%i]/div/div/div[2]/div/div/table/tbody/tr[5]/td/table/tbody/tr/td[2]/button" % path_num
+                submit_elem = self.driver.find_element_by_xpath(submit_xpath)
                 submit_elem.click()
 
             while True:
@@ -334,15 +399,15 @@ class type_racer:
                 time.sleep(1)
                 was_closed = False
                 for path_num in self.possible_captcha_paths:
-                    restart_path = r"/html/body/div[%i]/div/div/div[3]/div/div/table/tbody/tr[3]/td/table/tbody/tr/td[2]/button" % path_num
-                    close_path = r"/html/body/div[%i]/div/div/div[1]" % path_num
+                    restart_xpath = r"/html/body/div[%i]/div/div/div[3]/div/div/table/tbody/tr[3]/td/table/tbody/tr/td[2]/button" % path_num
+                    close_xpath = r"/html/body/div[%i]/div/div/div[1]" % path_num
                     try:
-                        restart_elem = self.driver.find_element_by_xpath(restart_path)
+                        restart_elem = self.driver.find_element_by_xpath(restart_xpath)
                         restart_elem.click()
                         break
                     except NoSuchElementException:
                         try:
-                            close_elem = self.driver.find_element_by_xpath(close_path)
+                            close_elem = self.driver.find_element_by_xpath(close_xpath)
                             close_elem.click()
                             was_closed = True
                             break
@@ -353,30 +418,55 @@ class type_racer:
                 time.sleep(1)
 
     def handle_popup(self):
+        '''
+        if typeracer prompts you to sign up, hit no thanks
+
+        input: none
+        return: void
+        '''
         possible_paths = range(7, 13, 1)
         for path_num in possible_paths:
-            nothanks_path = r"/html/body/div[%i]/div/div/div[3]/div/div[2]/a" % path_num
+            nothanks_xpath = r"/html/body/div[%i]/div/div/div[3]/div/div[2]/a" % path_num
             try:
                 # A no thanks button might appear for joining instead of being a guest
                 # If we are running the program as a guest, so we will look for it
                 # And click it if it exists
-                nothanks_elem = self.driver.find_element_by_xpath(nothanks_path)
+                nothanks_elem = self.driver.find_element_by_xpath(nothanks_xpath)
                 nothanks_elem.click()
             except NoSuchElementException:
                 pass
 
     def initialize_racer(self):
+        '''
+        logs in and enters the race
+
+        input: none
+        return: void
+        '''
         print("Logging in...")
         self.log_in()
         print("Entering race...")
         self.enter_race()
 
     def race(self):
+        '''
+        completes the race
+
+        input: none
+        return: void
+        '''
         print("Completing race...")
         self.complete_race()
         time.sleep(1)
 
+
     def restart_race(self):
+        '''
+        loops and restarts the race
+
+        input: none
+        return: void
+        '''
         print("Restarting race...")
         while True:
             try:
@@ -401,11 +491,19 @@ class type_racer:
         time.sleep(1)
 
     def quit(self):
+        '''
+        exits driver
+
+        input: none
+        return: void
+        '''
         self.driver.quit()
 
+
+#------------------------RUN_SCRIPT------------------------#
 if __name__ == '__main__':
 
-    racer = type_racer()
+    racer = typeracer()
     racer.initialize_racer()
     racer.race()
     while True:
