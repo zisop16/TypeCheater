@@ -169,7 +169,7 @@ if __name__ == '__main__':
                 solution_text = "%s%s%s%s" % (first_text, second_text, third_text, fourth_text)
                 texts = (first_text, second_text, third_text, fourth_text)
             elif found_third:
-                if len(first_text) > 1:
+                if third_text[0] == ',':
                     solution_text = "%s%s%s" % (first_text, second_text, third_text)
                 else:
                     solution_text = "%s%s %s" % (first_text, second_text, third_text)
@@ -243,25 +243,34 @@ if __name__ == '__main__':
         if found_captcha:
 
             def extract_captcha():
-                captcha_path = r"/html/body/div[9]/div/div/div[2]/div/div/table/tbody/tr[3]/td/img"
-                second_path = r"/html/body/div[8]/div/div/div[2]/div/div/table/tbody/tr[3]/td/img"
-                third_path = r"/html/body/div[10]/div/div/div[2]/div/div/table/tbody/tr[3]/td/img"
-                num_loops = 0
+
+                def attempt_find():
+                    possible_paths = (8, 9, 10)
+                    correct_num = None
+                    for path_num in possible_paths:
+                        captcha_path = r"/html/body/div[%i]/div/div/div[2]/div/div/table/tbody/tr[3]/td/img" % path_num
+                        if path_num != possible_paths[len(possible_paths) - 1]:
+                            try:
+                                captcha_elem = driver.find_element_by_xpath(captcha_path)
+                                correct_num = path_num
+                                break
+                            except NoSuchElementException:
+                                pass
+                        else:
+                            captcha_elem = driver.find_element_by_xpath(captcha_path)
+                            correct_num = path_num
+                    return captcha_elem, correct_num
+
                 while True:
                     try:
-                        captcha_elem = driver.find_element_by_xpath(captcha_path)
+                        captcha_elem, path_num = attempt_find()
+                        break
                     except NoSuchElementException:
-                        try:
-                            captcha_elem = driver.find_element_by_xpath(second_path)
-                        except NoSuchElementException:
-                            try:
-                                captcha_elem = driver.find_element_by_xpath(third_path)
-                            except NoSuchElementException:
-                                time.sleep(1)
-                                continue
-                    return captcha_elem
+                        time.sleep(1)
+                return captcha_elem, path_num
+
             def solve_captcha():
-                captcha_elem = extract_captcha()
+                captcha_elem, path_num = extract_captcha()
                 captcha_url = captcha_elem.get_attribute("src")
                 captcha_page = requests.get(captcha_url)
                 with open("captcha_image.png", "wb") as captcha_file:
@@ -269,50 +278,32 @@ if __name__ == '__main__':
                 solver = CaptchaSolver(r"C:\Program Files\Tesseract-OCR\tesseract.exe")
                 solution = solver.resolve("captcha_image.png").replace("\n", "")
 
+                captcha_textbox_path = r"/html/body/div[%i]/div/div/div[2]/div/div/table/tbody/tr[4]/td/textarea" % path_num
                 while True:
                     try:
-                        captcha_textbox_path = r"/html/body/div[8]/div/div/div[2]/div/div/table/tbody/tr[4]/td/textarea"
-                        other_captchabox = r"/html/body/div[9]/div/div/div[2]/div/div/table/tbody/tr[4]/td/textarea"
-                        try:
-                            captcha_textbox_elem = driver.find_element_by_xpath(captcha_textbox_path)
-                        except NoSuchElementException:
-                            captcha_textbox_elem = driver.find_element_by_xpath(other_captchabox)
+                        captcha_textbox_elem = driver.find_element_by_xpath(captcha_textbox_path)
                         captcha_textbox_elem.send_keys(solution)
                         break
-
                     except (ElementNotInteractableException, NoSuchElementException):
                         time.sleep(1)
 
-                submit_path = r"/html/body/div[8]/div/div/div[2]/div/div/table/tbody/tr[5]/td/table/tbody/tr/td[2]/button"
-                other_submit = r"/html/body/div[9]/div/div/div[2]/div/div/table/tbody/tr[5]/td/table/tbody/tr/td[2]/button"
-                try:
-                    submit_elem = driver.find_element_by_xpath(submit_path)
-                except NoSuchElementException:
-                    submit_elem = driver.find_element_by_xpath(other_submit)
+                submit_path = r"/html/body/div[%i]/div/div/div[2]/div/div/table/tbody/tr[5]/td/table/tbody/tr/td[2]/button" % path_num
+                submit_elem = driver.find_element_by_xpath(submit_path)
                 submit_elem.click()
+                return path_num
 
             while True:
-                solve_captcha()
+                path_num = solve_captcha()
                 time.sleep(2)
                 try:
-                    restart_path = r"/html/body/div[9]/div/div/div[3]/div/div/table/tbody/tr[3]/td/table/tbody/tr/td[2]/button"
-                    other_restart = r"/html/body/div[8]/div/div/div[3]/div/div/table/tbody/tr[3]/td/table/tbody/tr/td[2]/button"
-                    try:
-                        restart_elem = driver.find_element_by_xpath(restart_path)
-                    except NoSuchElementException:
-                        restart_elem = driver.find_element_by_xpath(other_restart)
+                    restart_path = r"/html/body/div[%i]/div/div/div[3]/div/div/table/tbody/tr[3]/td/table/tbody/tr/td[2]/button" % path_num
+                    restart_elem = driver.find_element_by_xpath(restart_path)
                     restart_elem.click()
                     time.sleep(2)
                 except NoSuchElementException:
                     break
-            close_path = r"/html/body/div[8]/div/div/div[1]"
-            other_close = r"/html/body/div[9]/div/div/div[1]"
-            try:
-                close_elem = driver.find_element_by_xpath(close_path)
-            except NoSuchElementException:
-                close_elem = driver.find_element_by_xpath(other_close)
-            except NoSuchElementException:
-                return
+            close_path = r"/html/body/div[%i]/div/div/div[1]" % path_num
+            close_elem = driver.find_element_by_xpath(close_path)
             close_elem.click()
 
 
@@ -340,7 +331,6 @@ if __name__ == '__main__':
                 except StaleElementReferenceException:
                     # This is the exception that will be thrown if we've gone to the next page already
                     # And there is no element to click
-                    print("test")
                     pass
                 break
             except ElementClickInterceptedException:

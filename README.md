@@ -4,7 +4,7 @@ Have you ever wanted to impress your friends by getting large, insane typeracer 
 
 ## Getting started
 
-temp, [requirements.txt](TypeCheater/requirements.txt)
+temp, [requirements.txt](requirements.txt)
 
 ## Usage
 
@@ -16,4 +16,4 @@ This project is licensed under the GNU v3 license. See [LICENSE](LICENSE) for mo
 
 ## Acknowledgements
 
-This project could not have been possible without the gracious support of the mods of the official [Typeracer Discord](https://discord.com/invite/typeracer) community.
+This project would not have been possible without the gracious support of the mods of the official [Typeracer Discord](https://discord.com/invite/typeracer) community.
