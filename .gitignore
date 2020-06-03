@@ -1,4 +1,5 @@
 __pycache__/
+venv/
 captcha_image.png
 account.txt
 dist/
