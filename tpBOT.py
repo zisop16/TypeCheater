@@ -8,7 +8,7 @@ import time
 import pytesseract
 import requests
 import math
-from .CaptchaSolve import CaptchaSolver
+from CaptchaSolve import CaptchaSolver
 
 class type_racer:
     def __init__(self):
