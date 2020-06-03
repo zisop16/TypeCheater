@@ -8,6 +8,7 @@ import time
 import pytesseract
 import requests
 import math
+import json
 from CaptchaSolve import CaptchaSolver
 
 class type_racer:
@@ -21,7 +22,7 @@ class type_racer:
 
     def log_in(self):
         """
-        Logs in by looking at account.txt for an account
+        Logs in by looking at config.txt for an account
         """
         main_url = "https://play.typeracer.com/"
         self.driver.get(main_url)
@@ -34,24 +35,71 @@ class type_racer:
                 time.sleep(1)
         signin_element.click()
 
+        def write_default():
+            with open("config.txt", "w") as config_file:
+                config_dict = {
+                    "Username": "BotsAreGay",
+                    "Password": "",
+                    "Words Per Minute": 150,
+                    "Characters per key input": 5
+                }
+                config_text = json.dumps(config_dict, indent=4)
+                config_file.write(config_text)
+                self.driver.quit()
         as_guest = False
         try:
-            with open("account.txt") as account_file:
-                userpass = account_file.read().split(":")
-                username = userpass[0]
+            with open("config.txt") as config_file:
                 try:
-                    password = userpass[1]
-                except IndexError:
+                    config_json = json.loads(config_file.read())
+                except json.decoder.JSONDecodeError:
+                    print("Couldn't find anything in config.txt... please rerun the program")
+                    write_default()
+                    quit()
+                try:
+                    username = config_json["Username"]
+                except KeyError:
+                    username = ""
+                try:
+                    password = config_json["Password"]
+                    if password == "":
+                        as_guest = True
+                except KeyError:
                     as_guest = True
+                try:
+                    set_default = False
+                    try:
+                        self.wpm = int(config_json["Words Per Minute"])
+                    except ValueError:
+                        set_default = True
+                    if not self.wpm > 0:
+                        set_default = True
+                    if set_default:
+                        print("Words per minute not valid... using default of 100")
+                        self.wpm = 100
+                except KeyError:
+                    print("Couldn't find wpm in config.txt... using default of 100")
+                    self.wpm = 100
+                try:
+                    set_default = False
+                    try:
+                        self.chars_per_word = int(config_json["Characters per key input"])
+                    except ValueError:
+                        set_default = True
+                    if not self.chars_per_word > 0:
+                        set_default = True
+                    if set_default:
+                        self.chars_per_word = 5
+                except KeyError:
+                    print("Couldnt find Characters per key input in config... using default of 5")
+                    self.chars_per_word = 5
+
         except FileNotFoundError:
-            print("Couldn't find an account.txt. Please restart the program with your Username:Password inside."
+            print("Couldn't find a config.txt. Please restart the program with your Username:Password inside."
                   " Alternatively, play as a guest by using Username and no colon")
-            with open("account.txt", "w") as account_file:
-                account_file.write("SampleUsername:SamplePassword")
-                self.driver.quit()
-                quit()
+            write_default()
+            quit()
         if as_guest:
-            print("Found no password in accounts.txt... playing as a guest with name inputted")
+            print("Found no password in config.txt... playing as a guest with name inputted")
             while True:
                 try:
                     guest_path = "/html/body/div[5]/div/div/div[3]/div/div[1]/div/table[3]/tbody/tr[1]/td/a/table/tbody/tr/td[2]"
@@ -68,7 +116,7 @@ class type_racer:
                 except NoSuchElementException:
                     time.sleep(1)
             if username == "":
-                print("No username found in account.txt... playing with name of randomly generated characters")
+                print("No username found in config.txt... playing with name of randomly generated characters")
                 time.sleep(1.5)
                 username = "IM A BOT LOL"
                 print("Name selected: %s" % username)
@@ -178,24 +226,26 @@ class type_racer:
             text_num += 1
         print("Solution: %s" % solution_text)
 
+        num_words = int(math.ceil(len(solution_text) / self.chars_per_word))
+        words = []
+        wps = self.wpm / 60
+        wait_time = (1 / wps) * (self.chars_per_word / 5)
+        wait_time *= .95
+        for word_num in range(num_words):
+            start_ind = word_num * self.chars_per_word
+            end_ind = start_ind + self.chars_per_word
+            words.append(solution_text[start_ind: end_ind])
+
         while True:
             try:
                 raceenter_path = r"/html/body/div[1]/div/div[1]/div[2]/table/tbody/tr[2]/td[2]/div/div[1]/div/table/tbody/tr[2]/td[3]/table/tbody/tr[2]/td/table/tbody/tr[2]/td/input"
                 raceenter_elem = self.driver.find_element_by_xpath(raceenter_path)
-                num_chars = 5
-                num_words = int(math.ceil(len(solution_text) / num_chars))
-                words = []
-                wait_time = .15
-                for word_num in range(num_words):
-                    start_ind = word_num * num_chars
-                    end_ind = start_ind + num_chars
-                    words.append(solution_text[start_ind: end_ind])
+
                 for word in words:
                     start_time = time.time()
                     raceenter_elem.send_keys(word)
                     end_time = time.time()
-                    elapsed = end_time - start_time
-                    curr_wait = max(wait_time - elapsed, 0)
+                    curr_wait = max(wait_time - (end_time - start_time), 0)
                     time.sleep(curr_wait)
                 try:
                     raceenter_elem.send_keys(" ")
@@ -325,9 +375,6 @@ class type_racer:
         print("Completing race...")
         self.complete_race()
         time.sleep(1)
-        print("Handling captcha...")
-        self.handle_captcha()
-        time.sleep(1)
 
     def restart_race(self):
         print("Restarting race...")
@@ -361,9 +408,26 @@ if __name__ == '__main__':
     racer = type_racer()
     racer.initialize_racer()
     racer.race()
-    for i in range(5):
-        racer.restart_race()
-        racer.race()
+    while True:
+        should_stop = False
+        while True:
+            restart = input("Type Y to continue and N to exit, then enter (Y/N) ").lower().replace(" ", "")
+            if restart == "y":
+                should_stop = False
+                break
+            elif restart == "n":
+                should_stop = True
+                break
+            else:
+                continue
+        if should_stop:
+            break
+        else:
+            print("Handling captcha...")
+            racer.handle_captcha()
+            time.sleep(1)
+            racer.restart_race()
+            racer.race()
+            continue
 
-    input("Exit")
     racer.quit()
