@@ -13,7 +13,7 @@ Steps to find correct version:
 - Look up "Chromedriver version XX download" and put in your version in place of XX
 - Download it
 
-3. Place chromedriver.exe into a folder, with the .exe file
+3. Place chromedriver.exe into a folder, with the tpBOT.exe file
 4. Download tesseract here: https://digi.bib.uni-mannheim.de/tesseract/tesseract-ocr-w64-setup-v5.0.0-alpha.20200328.exe
 5. Install it
 6. Setup is now complete
