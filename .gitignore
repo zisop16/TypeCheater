@@ -1,6 +1,7 @@
 __pycache__/
 venv/
 captcha_image.png
+build.bat
 config.txt
 dist/
 build/
