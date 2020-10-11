@@ -86,3 +86,5 @@ This project is licensed under the GNU v3 license. See [LICENSE](LICENSE) for mo
 ## Acknowledgements
 
 This project would not have been possible without the gracious support of the mods of the official [Typeracer Discord](https://discord.com/invite/typeracer) community.
+
+jk fuck typeracer mods
