@@ -1,4 +1,10 @@
-# TypeCheater
+yeah i know this doesn't work with the new ui update
+i'll maybe fix it someday 
+(honestly you can try fixing it urself, all u need to do is change the paths in tpBOT.py)
+im just lazy
+
+
+~~# TypeCheater
 
 Have you ever wanted to impress your friends by getting large, insane typeracer scores? Now you can!
 
