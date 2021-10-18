@@ -1,10 +1,3 @@
-yeah i know this doesn't work with the new ui update
-i'll maybe fix it someday 
-(honestly you can try fixing it urself, all u need to do is change the paths in tpBOT.py)
-im just lazy
-
-
-~~# TypeCheater
 
 Have you ever wanted to impress your friends by getting large, insane typeracer scores? Now you can!
 
@@ -51,7 +44,7 @@ Note: if you need to install a 32-bit version of Tesseract, navigate [here](http
 3. The first successful time you run the project, it will create a config.txt in your folder. It should look something like this:
 ```
 {
-    "Username": "BotsAreGay",
+    "Username": "Bot",
     "Password": "",
     "Words Per Minute": 150,
     "Characters per key input": 5
@@ -73,7 +66,7 @@ it gets one correct. After one captcha is solved (if you are playing on an accou
 3. The first time you run the project, it will create a config.txt in your folder. It should look something like this:
 ```
 {
-    "Username": "BotsAreGay",
+    "Username": "Bot",
     "Password": "",
     "Words Per Minute": 150,
     "Characters per key input": 5
@@ -89,8 +82,3 @@ it gets one correct. After one captcha is solved (if you are playing on an accou
 
 This project is licensed under the GNU v3 license. See [LICENSE](LICENSE) for more details.
 
-## Acknowledgements
-
-This project would not have been possible without the gracious support of the mods of the official [Typeracer Discord](https://discord.com/invite/typeracer) community.
-
-jk fuck typeracer mods
